@@ -1,0 +1,85 @@
+spring:
+  application:
+    name: jchatmind
+  devtools:
+    restart:
+      # Long-running agent turns and SSE sessions are easily interrupted by hot restarts.
+      enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/jchatmind
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 220MB
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: your-email
+    password: your-password # 邮箱授权码
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  ai:
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:your-api-key}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
+    zhipuai:
+      api-key: your-api-key
+      base-url: https://open.bigmodel.cn/api/paas
+      chat:
+        options:
+          model: glm-4.6
+mybatis:
+  type-aliases-package: com.kama.jchatmind.model.entity
+  mapper-locations: classpath:mapper/*.xml
+  type-handlers-package: com.kama.jchatmind.typehandler
+
+document:
+  storage:
+    base-path: ./data/documents
+
+rag:
+  embedding:
+    base-url: http://localhost:11434
+    model: bge-m3
+    auto-index-on-search: true
+
+agent:
+  workflow:
+    vibration:
+      speed-path-enabled: false
+
+management:
+  health:
+    mail:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        agent.turn.total: true
+        agent.runtime.create: true
+        agent.memory.load: true
+        agent.memory.db.load: true
+        agent.llm.think: true
+        agent.tool.execute: true
+        agent.tool.process: true

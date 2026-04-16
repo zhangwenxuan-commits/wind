@@ -1,0 +1,38 @@
+# Logs
+logs/
+*.log
+
+# Build outputs
+target/
+dist/
+dist-ssr/
+
+# Frontend dependencies and local env
+node_modules/
+ui/node_modules/
+ui/dist/
+ui/logs/
+ui/.env
+ui/*.local
+
+# Backend runtime files
+jchatmind/target/
+jchatmind/logs/
+jchatmind/data/
+jchatmind/*.log
+
+# Local environment files
+.env
+.env.*
+
+# Editor and OS files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
