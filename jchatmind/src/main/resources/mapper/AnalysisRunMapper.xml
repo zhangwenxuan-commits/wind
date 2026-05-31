@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kama.jchatmind.mapper.AnalysisRunMapper">
+
+    <resultMap id="BaseResultMap" type="com.kama.jchatmind.model.entity.AnalysisRun">
+        <id property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="taskId" column="task_id" jdbcType="VARCHAR"/>
+        <result property="runNo" column="run_no" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+        <result property="riskLevel" column="risk_level" jdbcType="VARCHAR"/>
+        <result property="summary" column="summary" jdbcType="VARCHAR"/>
+        <result property="metadata" column="metadata" jdbcType="VARCHAR"/>
+        <result property="startedAt" column="started_at" jdbcType="TIMESTAMP"/>
+        <result property="finishedAt" column="finished_at" jdbcType="TIMESTAMP"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.kama.jchatmind.model.entity.AnalysisRun"
+            keyColumn="id" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO analysis_run
+        (
+            task_id,
+            run_no,
+            status,
+            risk_level,
+            summary,
+            metadata,
+            started_at,
+            finished_at,
+            created_at,
+            updated_at
+        )
+        VALUES
+        (
+            CAST(#{taskId} AS uuid),
+            #{runNo},
+            #{status},
+            #{riskLevel},
+            #{summary},
+            CAST(#{metadata} AS jsonb),
+            #{startedAt},
+            #{finishedAt},
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id, task_id, run_no, status, risk_level, summary, metadata::text AS metadata,
+               started_at, finished_at, created_at, updated_at
+        FROM analysis_run
+        WHERE id = CAST(#{id} AS uuid)
+    </select>
+
+    <select id="selectLatestByTaskId" resultMap="BaseResultMap">
+        SELECT id, task_id, run_no, status, risk_level, summary, metadata::text AS metadata,
+               started_at, finished_at, created_at, updated_at
+        FROM analysis_run
+        WHERE task_id = CAST(#{taskId} AS uuid)
+        ORDER BY run_no DESC, created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectNextRunNo" resultType="java.lang.Integer">
+        SELECT COALESCE(MAX(run_no), 0) + 1
+        FROM analysis_run
+        WHERE task_id = CAST(#{taskId} AS uuid)
+    </select>
+
+    <select id="selectByTaskId" resultMap="BaseResultMap">
+        SELECT id, task_id, run_no, status, risk_level, summary, metadata::text AS metadata,
+               started_at, finished_at, created_at, updated_at
+        FROM analysis_run
+        WHERE task_id = CAST(#{taskId} AS uuid)
+        ORDER BY run_no DESC, created_at DESC
+    </select>
+</mapper>

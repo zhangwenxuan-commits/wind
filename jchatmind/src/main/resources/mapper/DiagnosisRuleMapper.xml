@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kama.jchatmind.mapper.DiagnosisRuleMapper">
+
+    <resultMap id="BaseResultMap" type="com.kama.jchatmind.model.entity.DiagnosisRule">
+        <id property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="ruleCode" column="rule_code" jdbcType="VARCHAR"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+        <result property="ruleType" column="rule_type" jdbcType="VARCHAR"/>
+        <result property="applicability" column="applicability" jdbcType="VARCHAR"/>
+        <result property="componentScope" column="component_scope" jdbcType="VARCHAR"/>
+        <result property="signalDomain" column="signal_domain" jdbcType="VARCHAR"/>
+        <result property="metricKey" column="metric_key" jdbcType="VARCHAR"/>
+        <result property="comparator" column="comparator" jdbcType="VARCHAR"/>
+        <result property="thresholdWarn" column="threshold_warn" jdbcType="DOUBLE"/>
+        <result property="thresholdAlert" column="threshold_alert" jdbcType="DOUBLE"/>
+        <result property="frequencyBandHint" column="frequency_band_hint" jdbcType="VARCHAR"/>
+        <result property="patternText" column="pattern_text" jdbcType="VARCHAR"/>
+        <result property="recommendation" column="recommendation" jdbcType="VARCHAR"/>
+        <result property="sourceTitle" column="source_title" jdbcType="VARCHAR"/>
+        <result property="sourceUrl" column="source_url" jdbcType="VARCHAR"/>
+        <result property="sourcePublishedAt" column="source_published_at" jdbcType="VARCHAR"/>
+        <result property="provenance" column="provenance" jdbcType="VARCHAR"/>
+        <result property="importBatch" column="import_batch" jdbcType="VARCHAR"/>
+        <result property="notes" column="notes" jdbcType="VARCHAR"/>
+        <result property="metadata" column="metadata" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id,
+               rule_code,
+               name,
+               status,
+               rule_type,
+               applicability,
+               component_scope,
+               signal_domain,
+               metric_key,
+               comparator,
+               threshold_warn,
+               threshold_alert,
+               frequency_band_hint,
+               pattern_text,
+               recommendation,
+               source_title,
+               source_url,
+               source_published_at,
+               provenance,
+               import_batch,
+               notes,
+               metadata::text AS metadata,
+               created_at,
+               updated_at
+        FROM diagnosis_rule
+        WHERE id = CAST(#{id} AS uuid)
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT id,
+               rule_code,
+               name,
+               status,
+               rule_type,
+               applicability,
+               component_scope,
+               signal_domain,
+               metric_key,
+               comparator,
+               threshold_warn,
+               threshold_alert,
+               frequency_band_hint,
+               pattern_text,
+               recommendation,
+               source_title,
+               source_url,
+               source_published_at,
+               provenance,
+               import_batch,
+               notes,
+               metadata::text AS metadata,
+               created_at,
+               updated_at
+        FROM diagnosis_rule
+        ORDER BY rule_type, metric_key, updated_at DESC
+    </select>
+
+    <select id="selectActiveByType" resultMap="BaseResultMap">
+        SELECT id,
+               rule_code,
+               name,
+               status,
+               rule_type,
+               applicability,
+               component_scope,
+               signal_domain,
+               metric_key,
+               comparator,
+               threshold_warn,
+               threshold_alert,
+               frequency_band_hint,
+               pattern_text,
+               recommendation,
+               source_title,
+               source_url,
+               source_published_at,
+               provenance,
+               import_batch,
+               notes,
+               metadata::text AS metadata,
+               created_at,
+               updated_at
+        FROM diagnosis_rule
+        WHERE status = 'ACTIVE'
+          AND rule_type = #{ruleType}
+        ORDER BY updated_at DESC
+    </select>
+</mapper>

@@ -1,124 +1,102 @@
-import React, { useState } from "react";
-import { RobotOutlined } from "@ant-design/icons";
-import { Tabs, type TabsProps } from "antd";
-import { useNavigate } from "react-router-dom";
-import AgentTabContent from "./tabs/AgentTabContent.tsx";
-import AddAgentModal from "./modals/AddAgentModal.tsx";
-import ChatTabContent from "./tabs/ChatTabContent.tsx";
-import KnowledgeBaseTabContent from "./tabs/KnowledgeBaseTabContent.tsx";
-import AddKnowledgeBaseModal from "./modals/AddKnowledgeBaseModal.tsx";
-import { useAgents } from "../hooks/useAgents.ts";
-import { useKnowledgeBases } from "../hooks/useKnowledgeBases.ts";
+import React from "react";
+import {
+  AppstoreOutlined,
+  FileTextOutlined,
+  FolderOpenOutlined,
+  RadarChartOutlined,
+  SettingOutlined,
+  UnorderedListOutlined,
+} from "@ant-design/icons";
+import { useLocation, useNavigate } from "react-router-dom";
 
-interface SideMenuProps {
-  children?: React.ReactNode;
+interface NavItem {
+  key: string;
+  label: string;
+  path: string;
+  icon: React.ReactNode;
 }
 
-const SideMenu: React.FC<SideMenuProps> = () => {
+const navItems: NavItem[] = [
+  {
+    key: "workbench",
+    label: "工作台",
+    path: "/workbench",
+    icon: <AppstoreOutlined />,
+  },
+  {
+    key: "tasks",
+    label: "诊断任务",
+    path: "/tasks",
+    icon: <UnorderedListOutlined />,
+  },
+  {
+    key: "assets",
+    label: "数据资产",
+    path: "/assets",
+    icon: <RadarChartOutlined />,
+  },
+  {
+    key: "parameters",
+    label: "参数与知识",
+    path: "/parameters",
+    icon: <FolderOpenOutlined />,
+  },
+  {
+    key: "reports",
+    label: "报告中心",
+    path: "/reports",
+    icon: <FileTextOutlined />,
+  },
+  {
+    key: "settings",
+    label: "系统配置",
+    path: "/settings",
+    icon: <SettingOutlined />,
+  },
+];
+
+const SideMenu: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false);
-  const toggleAddAgentModal = () => {
-    setIsAddAgentModalOpen(!isAddAgentModalOpen);
-    setEditingAgent(null);
+  const isActive = (path: string) => {
+    if (path === "/workbench") {
+      return location.pathname === "/" || location.pathname.startsWith(path);
+    }
+    return location.pathname.startsWith(path);
   };
-
-  const [editingAgent, setEditingAgent] = useState<
-    import("../api/api.ts").AgentVO | null
-  >(null);
-
-  /**
-   * 添加知识库模态框状态
-   */
-  const [isAddKnowledgeBaseModalOpen, setIsAddKnowledgeBaseModalOpen] =
-    useState(false);
-  const toggleAddKnowledgeBaseModal = () => {
-    setIsAddKnowledgeBaseModalOpen(!isAddKnowledgeBaseModalOpen);
-  };
-  const { agents, createAgentHandle, deleteAgentHandle, updateAgentHandle } =
-    useAgents();
-
-  const [activeKey, setActiveKey] = useState(() => {
-    if (location.pathname.startsWith("/agent")) return "agent";
-    if (location.pathname.startsWith("/knowledge-base")) return "knowledgeBase";
-    if (location.pathname.startsWith("/chat")) return "chat";
-    return "agent";
-  });
-
-  const { knowledgeBases, createKnowledgeBaseHandle } = useKnowledgeBases();
-
-  // 处理标签页切换
-  const handleTabChange = (key: string) => {
-    setActiveKey(key);
-  };
-
-  const items: TabsProps["items"] = [
-    {
-      key: "agent",
-      label: <span className="select-none">智能体助手</span>,
-      children: (
-        <AgentTabContent
-          agents={agents}
-          onSelectAgent={() => {}}
-          onCreateAgentClick={toggleAddAgentModal}
-          onEditAgent={(agent) => {
-            setEditingAgent(agent);
-            setIsAddAgentModalOpen(true);
-          }}
-          onDeleteAgent={deleteAgentHandle}
-        />
-      ),
-    },
-    {
-      key: "chat",
-      label: <span className="select-none">聊天记录</span>,
-      children: <ChatTabContent />,
-    },
-    {
-      key: "knowledgeBase",
-      label: <span className="select-none">知识库</span>,
-      children: (
-        <KnowledgeBaseTabContent
-          knowledgeBases={knowledgeBases}
-          onCreateKnowledgeBaseClick={toggleAddKnowledgeBaseModal}
-          onSelectKnowledgeBase={(knowledgeBaseId) => {
-            navigate(`/knowledge-base/${knowledgeBaseId}`);
-          }}
-        />
-      ),
-    },
-  ];
 
   return (
-    <div className="px-4 flex flex-col h-full">
-      <div className="h-14 w-full flex items-center border-b border-gray-200">
-        <div className="flex items-center gap-2.5 mx-4">
-          <RobotOutlined className="text-xl text-indigo-600" />
-          <div className="text-lg font-semibold select-none text-gray-900">
-            JChatMind
-          </div>
+    <div className="flex h-full flex-col border-r border-slate-200 bg-slate-50">
+      <div className="border-b border-slate-200 px-5 py-5">
+        <div className="text-lg font-semibold text-slate-900">Winds</div>
+        <div className="mt-1 text-sm text-slate-500">风机轴承智能诊断工作台</div>
+      </div>
+      <div className="flex-1 px-3 py-4">
+        <div className="space-y-1">
+          {navItems.map((item) => {
+            const active = isActive(item.path);
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => navigate(item.path)}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                  active
+                    ? "bg-white font-medium text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:bg-white hover:text-slate-900"
+                }`}
+              >
+                <span className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
-      <div className="flex-1 min-h-0 flex flex-col">
-        <Tabs
-          activeKey={activeKey}
-          onChange={handleTabChange}
-          items={items}
-          // className="h-full flex flex-col [&_.ant-tabs-content-holder]:flex-1 [&_.ant-tabs-content-holder]:min-h-0 [&_.ant-tabs-content]:h-full [&_.ant-tabs-tabpane]:h-full"
-        />
+      <div className="border-t border-slate-200 px-5 py-4 text-xs text-slate-500">
+        任务驱动分析与结构化报告
       </div>
-      <AddAgentModal
-        open={isAddAgentModalOpen}
-        onClose={toggleAddAgentModal}
-        createAgentHandle={createAgentHandle}
-        updateAgentHandle={updateAgentHandle}
-        editingAgent={editingAgent}
-      />
-      <AddKnowledgeBaseModal
-        open={isAddKnowledgeBaseModalOpen}
-        onClose={toggleAddKnowledgeBaseModal}
-        createKnowledgeBaseHandle={createKnowledgeBaseHandle}
-      />
     </div>
   );
 };

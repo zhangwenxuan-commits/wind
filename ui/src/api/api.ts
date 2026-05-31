@@ -399,3 +399,359 @@ export async function getOptionalTools(): Promise<GetOptionalToolsResponse> {
   const tools = await get<ToolVO[]>("/tools");
   return { tools };
 }
+
+export interface SignalAssetVO {
+  id: string;
+  filename: string;
+  filetype: string;
+  size: number;
+  knowledgeBaseId?: string;
+  knowledgeBaseName?: string;
+  documentKind?: string;
+  processingStatus?: string;
+  parseError?: string;
+  signalName?: string;
+  sampleRate?: number;
+  unit?: string;
+  deviceName?: string;
+  availableSignals?: string[];
+  defaultSpeedSignalName?: string;
+  hasSpeedSignal?: boolean;
+  hasVibrationSignal?: boolean;
+  updatedAt?: string;
+}
+
+export interface GetSignalAssetsResponse {
+  assets: SignalAssetVO[];
+}
+
+export interface CreateSignalAssetResponse {
+  assetId: string;
+}
+
+export async function getSignalAssets(): Promise<GetSignalAssetsResponse> {
+  return get<GetSignalAssetsResponse>("/signal-assets");
+}
+
+export async function uploadSignalAsset(
+  file: File,
+): Promise<CreateSignalAssetResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${BASE_URL}/signal-assets/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const apiResponse = await response.json();
+  if (apiResponse.code !== 200) {
+    throw new Error(apiResponse.message || "上传失败");
+  }
+
+  return apiResponse.data;
+}
+
+export interface ParameterSourceVO {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface GetParameterSourcesResponse {
+  parameterSources: ParameterSourceVO[];
+}
+
+export async function getParameterSources(): Promise<GetParameterSourcesResponse> {
+  return get<GetParameterSourcesResponse>("/parameter-sources");
+}
+
+export interface ParameterTemplateContent {
+  bearingGeometry?: {
+    rollingElementCount?: number;
+    rollingElementDiameterMm?: number;
+    pitchDiameterMm?: number;
+    contactAngleDeg?: number;
+  };
+  thresholds?: {
+    crestFactorWarn?: number;
+    kurtosisWarn?: number;
+    highFrequencyEnergyRatioWarn?: number;
+  };
+  notes?: string;
+}
+
+export interface ParameterTemplateVO {
+  id: string;
+  name: string;
+  deviceModel?: string;
+  version: number;
+  status: string;
+  referenceShaft?: string;
+  envelopeBandHint?: string;
+  content?: ParameterTemplateContent;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateParameterTemplateRequest {
+  name: string;
+  deviceModel?: string;
+  status?: string;
+  referenceShaft?: string;
+  envelopeBandHint?: string;
+  content?: ParameterTemplateContent;
+}
+
+export interface UpdateParameterTemplateRequest {
+  name?: string;
+  deviceModel?: string;
+  status?: string;
+  referenceShaft?: string;
+  envelopeBandHint?: string;
+  content?: ParameterTemplateContent;
+}
+
+export interface CreateParameterTemplateResponse {
+  templateId: string;
+}
+
+export interface GetParameterTemplatesResponse {
+  templates: ParameterTemplateVO[];
+}
+
+export async function getParameterTemplates(): Promise<GetParameterTemplatesResponse> {
+  return get<GetParameterTemplatesResponse>("/parameter-templates");
+}
+
+export async function createParameterTemplate(
+  request: CreateParameterTemplateRequest,
+): Promise<CreateParameterTemplateResponse> {
+  return post<CreateParameterTemplateResponse>("/parameter-templates", request);
+}
+
+export async function updateParameterTemplate(
+  templateId: string,
+  request: UpdateParameterTemplateRequest,
+): Promise<void> {
+  return patch<void>(`/parameter-templates/${templateId}`, request);
+}
+
+export interface DiagnosisTaskBasicStats {
+  mean?: number;
+  rms?: number;
+  standardDeviation?: number;
+  peakAbs?: number;
+  peakToPeak?: number;
+  crestFactor?: number;
+  kurtosis?: number;
+}
+
+export interface DiagnosisTaskPeakSummary {
+  frequencyHz: number;
+  amplitude: number;
+}
+
+export interface DiagnosisTaskSpeedSummary {
+  averageRpm: number;
+  equivalentFrequencyHz: number;
+}
+
+export interface DiagnosisTaskAnalysisSnapshot {
+  startedAt?: string;
+  finishedAt?: string;
+  basicStats?: DiagnosisTaskBasicStats;
+  dominantPeaks?: DiagnosisTaskPeakSummary[];
+  speedSummary?: DiagnosisTaskSpeedSummary;
+  evidence?: string[];
+  recommendation?: string;
+  conclusion?: string;
+}
+
+export interface DiagnosisTaskVO {
+  id: string;
+  title: string;
+  deviceName?: string;
+  status: string;
+  riskLevel?: string;
+  summary?: string;
+  symptomHint?: string;
+  referenceShaft?: string;
+  envelopeBandHint?: string;
+  confirmed?: boolean;
+  confirmedBy?: string;
+  confirmedAt?: string;
+  vibrationAsset?: DocumentVO;
+  speedAsset?: DocumentVO;
+  parameterTemplate?: ParameterTemplateVO;
+  parameterSource?: ParameterSourceVO;
+  latestAnalysis?: DiagnosisTaskAnalysisSnapshot;
+  latestRun?: AnalysisRunVO;
+  latestReport?: DiagnosisReportVO;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateDiagnosisTaskRequest {
+  title: string;
+  deviceName?: string;
+  vibrationDocumentId: string;
+  speedDocumentId?: string;
+  parameterTemplateId?: string;
+  parameterKbId?: string;
+  symptomHint?: string;
+  referenceShaft?: string;
+  envelopeBandHint?: string;
+}
+
+export interface UpdateDiagnosisTaskRequest {
+  title?: string;
+  deviceName?: string;
+  vibrationDocumentId?: string;
+  speedDocumentId?: string;
+  parameterTemplateId?: string;
+  parameterKbId?: string;
+  symptomHint?: string;
+  referenceShaft?: string;
+  envelopeBandHint?: string;
+}
+
+export interface CreateDiagnosisTaskResponse {
+  taskId: string;
+}
+
+export interface GetDiagnosisTasksResponse {
+  tasks: DiagnosisTaskVO[];
+}
+
+export interface GetDiagnosisTaskResponse {
+  task: DiagnosisTaskVO;
+}
+
+export async function getDiagnosisTasks(): Promise<GetDiagnosisTasksResponse> {
+  return get<GetDiagnosisTasksResponse>("/diagnosis-tasks");
+}
+
+export async function getDiagnosisTask(
+  taskId: string,
+): Promise<GetDiagnosisTaskResponse> {
+  return get<GetDiagnosisTaskResponse>(`/diagnosis-tasks/${taskId}`);
+}
+
+export async function createDiagnosisTask(
+  request: CreateDiagnosisTaskRequest,
+): Promise<CreateDiagnosisTaskResponse> {
+  return post<CreateDiagnosisTaskResponse>("/diagnosis-tasks", request);
+}
+
+export async function updateDiagnosisTask(
+  taskId: string,
+  request: UpdateDiagnosisTaskRequest,
+): Promise<void> {
+  return patch<void>(`/diagnosis-tasks/${taskId}`, request);
+}
+
+export async function startDiagnosisTask(
+  taskId: string,
+): Promise<GetDiagnosisTaskResponse> {
+  return post<GetDiagnosisTaskResponse>(`/diagnosis-tasks/${taskId}/start`);
+}
+
+export async function confirmDiagnosisTask(
+  taskId: string,
+  confirmedBy?: string,
+): Promise<void> {
+  return post<void>(`/diagnosis-tasks/${taskId}/confirm`, { confirmedBy });
+}
+
+export interface AnalysisRunMetadata {
+  basicStats?: DiagnosisTaskBasicStats;
+  evidence?: string[];
+  recommendation?: string;
+  conclusion?: string;
+}
+
+export interface AnalysisRunVO {
+  id: string;
+  taskId: string;
+  runNo: number;
+  status: string;
+  riskLevel?: string;
+  summary?: string;
+  metadata?: AnalysisRunMetadata;
+  startedAt?: string;
+  finishedAt?: string;
+  createdAt?: string;
+}
+
+export interface AnalysisEvidenceMetadata {
+  frequencyHz?: number;
+  amplitude?: number;
+  source?: string;
+}
+
+export interface AnalysisEvidenceVO {
+  id: string;
+  runId: string;
+  evidenceType: string;
+  title: string;
+  content?: string;
+  score?: number;
+  metadata?: AnalysisEvidenceMetadata;
+  createdAt?: string;
+}
+
+export interface GetAnalysisRunsResponse {
+  runs: AnalysisRunVO[];
+}
+
+export interface GetAnalysisEvidenceResponse {
+  evidence: AnalysisEvidenceVO[];
+}
+
+export async function getAnalysisRunsByTaskId(
+  taskId: string,
+): Promise<GetAnalysisRunsResponse> {
+  return get<GetAnalysisRunsResponse>(`/diagnosis-tasks/${taskId}/analysis-runs`);
+}
+
+export async function getAnalysisEvidenceByRunId(
+  runId: string,
+): Promise<GetAnalysisEvidenceResponse> {
+  return get<GetAnalysisEvidenceResponse>(`/analysis-runs/${runId}/evidence`);
+}
+
+export interface DiagnosisReportVO {
+  id: string;
+  taskId: string;
+  runId?: string;
+  version: number;
+  status: string;
+  title: string;
+  summary?: string;
+  contentMarkdown: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface GetDiagnosisReportsResponse {
+  reports: DiagnosisReportVO[];
+}
+
+export interface GetDiagnosisReportResponse {
+  report: DiagnosisReportVO;
+}
+
+export async function getDiagnosisReports(): Promise<GetDiagnosisReportsResponse> {
+  return get<GetDiagnosisReportsResponse>("/diagnosis-reports");
+}
+
+export async function getDiagnosisReport(
+  reportId: string,
+): Promise<GetDiagnosisReportResponse> {
+  return get<GetDiagnosisReportResponse>(`/diagnosis-reports/${reportId}`);
+}

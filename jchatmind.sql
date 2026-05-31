@@ -65,6 +65,117 @@ CREATE TABLE document (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE parameter_template (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    name TEXT NOT NULL,
+    device_model TEXT,
+    version INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'ACTIVE',
+    reference_shaft TEXT,
+    envelope_band_hint TEXT,
+    content JSONB,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE diagnosis_rule (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    rule_code TEXT NOT NULL,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ACTIVE',
+    rule_type TEXT NOT NULL,
+    applicability TEXT,
+    component_scope TEXT,
+    signal_domain TEXT,
+    metric_key TEXT,
+    comparator TEXT,
+    threshold_warn DOUBLE PRECISION,
+    threshold_alert DOUBLE PRECISION,
+    frequency_band_hint TEXT,
+    pattern_text TEXT NOT NULL,
+    recommendation TEXT,
+    source_title TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    source_published_at TEXT,
+    provenance TEXT NOT NULL,
+    import_batch TEXT,
+    notes TEXT,
+    metadata JSONB,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+
+    CONSTRAINT uq_diagnosis_rule_code UNIQUE (rule_code)
+);
+
+CREATE TABLE diagnosis_task (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    title TEXT NOT NULL,
+    device_name TEXT,
+    status TEXT NOT NULL,
+    risk_level TEXT,
+
+    vibration_document_id UUID REFERENCES document(id) ON DELETE SET NULL,
+    speed_document_id UUID REFERENCES document(id) ON DELETE SET NULL,
+    parameter_template_id UUID REFERENCES parameter_template(id) ON DELETE SET NULL,
+    parameter_kb_id UUID REFERENCES knowledge_base(id) ON DELETE SET NULL,
+
+    summary TEXT,
+    metadata JSONB,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE analysis_run (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    task_id UUID NOT NULL REFERENCES diagnosis_task(id) ON DELETE CASCADE,
+    run_no INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    risk_level TEXT,
+    summary TEXT,
+    metadata JSONB,
+
+    started_at TIMESTAMP,
+    finished_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE analysis_evidence (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    run_id UUID NOT NULL REFERENCES analysis_run(id) ON DELETE CASCADE,
+    evidence_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT,
+    score DOUBLE PRECISION,
+    metadata JSONB,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE diagnosis_report (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    task_id UUID NOT NULL REFERENCES diagnosis_task(id) ON DELETE CASCADE,
+    run_id UUID REFERENCES analysis_run(id) ON DELETE SET NULL,
+    version INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'DRAFT',
+    title TEXT NOT NULL,
+    summary TEXT,
+    content_markdown TEXT NOT NULL,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE chunk_bge_m3 (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -85,3 +196,21 @@ CREATE INDEX idx_chunk_embedding
 ON chunk_bge_m3
 USING ivfflat (embedding vector_l2_ops)
 WITH (lists = 100);
+
+CREATE INDEX idx_diagnosis_task_status
+ON diagnosis_task(status);
+
+CREATE INDEX idx_diagnosis_rule_type_status
+ON diagnosis_rule(rule_type, status);
+
+CREATE INDEX idx_diagnosis_rule_metric_key
+ON diagnosis_rule(metric_key);
+
+CREATE INDEX idx_analysis_run_task_id
+ON analysis_run(task_id);
+
+CREATE INDEX idx_analysis_evidence_run_id
+ON analysis_evidence(run_id);
+
+CREATE INDEX idx_diagnosis_report_task_id
+ON diagnosis_report(task_id);

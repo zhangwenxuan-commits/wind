@@ -70,3 +70,85 @@ export const formatDateTime = (dateString?: string): string => {
     });
   }
 };
+
+export const getTaskStatusLabel = (status?: string): string => {
+  switch (status) {
+    case "DRAFT":
+      return "草稿";
+    case "READY":
+      return "待分析";
+    case "RUNNING":
+      return "分析中";
+    case "REVIEW":
+      return "待确认";
+    case "COMPLETED":
+      return "已完成";
+    case "FAILED":
+      return "失败";
+    default:
+      return status || "未知";
+  }
+};
+
+export const getTaskStatusColor = (
+  status?: string,
+): "default" | "blue" | "gold" | "green" | "red" | "purple" => {
+  switch (status) {
+    case "READY":
+      return "blue";
+    case "RUNNING":
+      return "gold";
+    case "REVIEW":
+      return "purple";
+    case "COMPLETED":
+      return "green";
+    case "FAILED":
+      return "red";
+    default:
+      return "default";
+  }
+};
+
+export const getRiskLevelLabel = (riskLevel?: string): string => {
+  switch (riskLevel) {
+    case "HIGH":
+      return "高风险";
+    case "MEDIUM":
+      return "中风险";
+    case "LOW":
+      return "低风险";
+    case "UNKNOWN":
+      return "待评估";
+    default:
+      return riskLevel || "待评估";
+  }
+};
+
+export const getRiskLevelColor = (
+  riskLevel?: string,
+): "default" | "red" | "gold" | "green" => {
+  switch (riskLevel) {
+    case "HIGH":
+      return "red";
+    case "MEDIUM":
+      return "gold";
+    case "LOW":
+      return "green";
+    default:
+      return "default";
+  }
+};
+
+interface TaskSummaryLike {
+  status?: string;
+  riskLevel?: string;
+}
+
+export const buildWorkbenchMetrics = (tasks: TaskSummaryLike[]) => {
+  return {
+    total: tasks.length,
+    running: tasks.filter((task) => task.status === "RUNNING").length,
+    review: tasks.filter((task) => task.status === "REVIEW").length,
+    highRisk: tasks.filter((task) => task.riskLevel === "HIGH").length,
+  };
+};

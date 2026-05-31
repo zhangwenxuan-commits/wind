@@ -9,6 +9,7 @@ import com.kama.jchatmind.model.entity.Document;
 import com.kama.jchatmind.service.DocumentStorageService;
 import com.kama.jchatmind.service.MatFileParserService;
 import com.kama.jchatmind.service.VibrationAnalysisService;
+import com.kama.jchatmind.service.diagnosis.DiagnosisThresholdProfile;
 import com.kama.jchatmind.service.vibration.VibrationModels;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
@@ -279,8 +280,17 @@ public class VibrationAnalysisServiceImpl implements VibrationAnalysisService {
 
     @Override
     public VibrationModels.DiagnosisResult diagnose(String documentId, String symptomHint) throws IOException {
+        return diagnose(documentId, symptomHint, DiagnosisThresholdProfile.defaults());
+    }
+
+    @Override
+    public VibrationModels.DiagnosisResult diagnose(
+            String documentId,
+            String symptomHint,
+            DiagnosisThresholdProfile thresholdProfile
+    ) throws IOException {
         VibrationModels.SpectrumAnalysis spectrumAnalysis = analyzeSpectrum(documentId);
-        List<VibrationModels.DiagnosisCandidate> candidates = buildDiagnosisCandidates(spectrumAnalysis);
+        List<VibrationModels.DiagnosisCandidate> candidates = buildDiagnosisCandidates(spectrumAnalysis, thresholdProfile);
         if (candidates.isEmpty()) {
             candidates = List.of(VibrationModels.DiagnosisCandidate.builder()
                     .label("特征不明显")
@@ -653,12 +663,19 @@ public class VibrationAnalysisServiceImpl implements VibrationAnalysisService {
         return preview;
     }
 
-    private List<VibrationModels.DiagnosisCandidate> buildDiagnosisCandidates(VibrationModels.SpectrumAnalysis analysis) {
+    private List<VibrationModels.DiagnosisCandidate> buildDiagnosisCandidates(
+            VibrationModels.SpectrumAnalysis analysis,
+            DiagnosisThresholdProfile thresholdProfile
+    ) {
         List<VibrationModels.DiagnosisCandidate> candidates = new ArrayList<>();
         List<VibrationModels.SpectrumPeak> peaks = analysis.getDominantPeaks();
         if (peaks == null || peaks.isEmpty()) {
             return candidates;
         }
+
+        DiagnosisThresholdProfile effectiveProfile = thresholdProfile != null
+                ? thresholdProfile
+                : DiagnosisThresholdProfile.defaults();
 
         VibrationModels.SpectrumPeak dominantPeak = peaks.get(0);
         double dominantFrequency = dominantPeak.getFrequencyHz();
@@ -692,10 +709,12 @@ public class VibrationAnalysisServiceImpl implements VibrationAnalysisService {
         }
 
         if (stats != null && stats.getCrestFactor() != null && stats.getKurtosis() != null
-                && (stats.getCrestFactor() >= 4.5 || stats.getKurtosis() >= 4.5)) {
+                && (stats.getCrestFactor() >= effectiveProfile.getCrestFactorWarn()
+                || stats.getKurtosis() >= effectiveProfile.getKurtosisWarn())) {
+            double crestFactorExcess = stats.getCrestFactor() - effectiveProfile.getCrestFactorWarn();
             candidates.add(VibrationModels.DiagnosisCandidate.builder()
                     .label("疑似冲击性异常")
-                    .confidence(roundConfidence(0.66 + Math.min(0.18, (stats.getCrestFactor() - 4.5) * 0.04)))
+                    .confidence(roundConfidence(0.66 + Math.min(0.18, Math.max(0.0, crestFactorExcess) * 0.04)))
                     .evidence(List.of(
                             String.format("波形峰值因子为 %.2f", stats.getCrestFactor()),
                             String.format("峰度为 %.2f，存在明显尖峰/冲击特征", stats.getKurtosis())
@@ -705,7 +724,7 @@ public class VibrationAnalysisServiceImpl implements VibrationAnalysisService {
         }
 
         double highFreqRatio = estimateHighFrequencyRatio(analysis.getPreviewSpectrum(), analysis.getSampleRate());
-        if (highFreqRatio >= 0.45) {
+        if (highFreqRatio >= effectiveProfile.getHighFrequencyEnergyRatioWarn()) {
             candidates.add(VibrationModels.DiagnosisCandidate.builder()
                     .label("疑似高频摩擦或早期磨损")
                     .confidence(roundConfidence(Math.min(0.76, 0.55 + highFreqRatio * 0.25)))

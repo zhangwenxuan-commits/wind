@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kama.jchatmind.mapper.DiagnosisTaskMapper">
+
+    <resultMap id="BaseResultMap" type="com.kama.jchatmind.model.entity.DiagnosisTask">
+        <id property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="deviceName" column="device_name" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+        <result property="riskLevel" column="risk_level" jdbcType="VARCHAR"/>
+        <result property="vibrationDocumentId" column="vibration_document_id" jdbcType="VARCHAR"/>
+        <result property="speedDocumentId" column="speed_document_id" jdbcType="VARCHAR"/>
+        <result property="parameterTemplateId" column="parameter_template_id" jdbcType="VARCHAR"/>
+        <result property="parameterKbId" column="parameter_kb_id" jdbcType="VARCHAR"/>
+        <result property="summary" column="summary" jdbcType="VARCHAR"/>
+        <result property="metadata" column="metadata" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.kama.jchatmind.model.entity.DiagnosisTask"
+            keyColumn="id" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO diagnosis_task
+        (
+            title,
+            device_name,
+            status,
+            risk_level,
+            vibration_document_id,
+            speed_document_id,
+            parameter_template_id,
+            parameter_kb_id,
+            summary,
+            metadata,
+            created_at,
+            updated_at
+        )
+        VALUES
+        (
+            #{title},
+            #{deviceName},
+            #{status},
+            #{riskLevel},
+            CAST(#{vibrationDocumentId} AS uuid),
+            CAST(#{speedDocumentId} AS uuid),
+            CAST(#{parameterTemplateId} AS uuid),
+            CAST(#{parameterKbId} AS uuid),
+            #{summary},
+            CAST(#{metadata} AS jsonb),
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+            id,
+            title,
+            device_name,
+            status,
+            risk_level,
+            vibration_document_id,
+            speed_document_id,
+            parameter_template_id,
+            parameter_kb_id,
+            summary,
+            metadata::text AS metadata,
+            created_at,
+            updated_at
+        FROM diagnosis_task
+        WHERE id = CAST(#{id} AS uuid)
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT
+            id,
+            title,
+            device_name,
+            status,
+            risk_level,
+            vibration_document_id,
+            speed_document_id,
+            parameter_template_id,
+            parameter_kb_id,
+            summary,
+            metadata::text AS metadata,
+            created_at,
+            updated_at
+        FROM diagnosis_task
+        ORDER BY updated_at DESC
+    </select>
+
+    <update id="updateById" parameterType="com.kama.jchatmind.model.entity.DiagnosisTask">
+        UPDATE diagnosis_task
+        <set>
+            <if test="title != null">
+                title = #{title},
+            </if>
+            <if test="deviceName != null">
+                device_name = #{deviceName},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="riskLevel != null">
+                risk_level = #{riskLevel},
+            </if>
+            <if test="vibrationDocumentId != null">
+                vibration_document_id = CAST(#{vibrationDocumentId} AS uuid),
+            </if>
+            <if test="speedDocumentId != null">
+                speed_document_id = CAST(#{speedDocumentId} AS uuid),
+            </if>
+            <if test="parameterTemplateId != null">
+                parameter_template_id = CAST(#{parameterTemplateId} AS uuid),
+            </if>
+            <if test="parameterKbId != null">
+                parameter_kb_id = CAST(#{parameterKbId} AS uuid),
+            </if>
+            <if test="summary != null">
+                summary = #{summary},
+            </if>
+            <if test="metadata != null">
+                metadata = CAST(#{metadata} AS jsonb),
+            </if>
+            updated_at = NOW()
+        </set>
+        WHERE id = CAST(#{id} AS uuid)
+    </update>
+
+</mapper>

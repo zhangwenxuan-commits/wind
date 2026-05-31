@@ -1,6 +1,6 @@
 spring:
   application:
-    name: jchatmind
+    name: winds-diagnosis-backend
   devtools:
     restart:
       # Long-running agent turns and SSE sessions are easily interrupted by hot restarts.

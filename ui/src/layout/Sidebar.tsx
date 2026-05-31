@@ -9,7 +9,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     <div
       className="h-full bg-slate-50"
       style={{
-        width: "320px",
+        width: "280px",
       }}
     >
       {children}

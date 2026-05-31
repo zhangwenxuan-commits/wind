@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kama.jchatmind.mapper.ParameterTemplateMapper">
+
+    <resultMap id="BaseResultMap" type="com.kama.jchatmind.model.entity.ParameterTemplate">
+        <id property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="deviceModel" column="device_model" jdbcType="VARCHAR"/>
+        <result property="version" column="version" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+        <result property="referenceShaft" column="reference_shaft" jdbcType="VARCHAR"/>
+        <result property="envelopeBandHint" column="envelope_band_hint" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.kama.jchatmind.model.entity.ParameterTemplate"
+            keyColumn="id" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO parameter_template
+        (
+            name,
+            device_model,
+            version,
+            status,
+            reference_shaft,
+            envelope_band_hint,
+            content,
+            created_at,
+            updated_at
+        )
+        VALUES
+        (
+            #{name},
+            #{deviceModel},
+            #{version},
+            #{status},
+            #{referenceShaft},
+            #{envelopeBandHint},
+            CAST(#{content} AS jsonb),
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id, name, device_model, version, status, reference_shaft,
+               envelope_band_hint, content::text AS content, created_at, updated_at
+        FROM parameter_template
+        WHERE id = CAST(#{id} AS uuid)
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT id, name, device_model, version, status, reference_shaft,
+               envelope_band_hint, content::text AS content, created_at, updated_at
+        FROM parameter_template
+        ORDER BY updated_at DESC
+    </select>
+
+    <update id="updateById" parameterType="com.kama.jchatmind.model.entity.ParameterTemplate">
+        UPDATE parameter_template
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="deviceModel != null">device_model = #{deviceModel},</if>
+            <if test="version != null">version = #{version},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="referenceShaft != null">reference_shaft = #{referenceShaft},</if>
+            <if test="envelopeBandHint != null">envelope_band_hint = #{envelopeBandHint},</if>
+            <if test="content != null">content = CAST(#{content} AS jsonb),</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = CAST(#{id} AS uuid)
+    </update>
+</mapper>

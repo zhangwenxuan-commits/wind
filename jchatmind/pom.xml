@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.kama</groupId>
-    <artifactId>jchatmind</artifactId>
+    <artifactId>winds-diagnosis-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>jchatmind</name>
-    <description>jchatmind</description>
+    <name>winds-diagnosis-backend</name>
+    <description>Winds diagnosis backend service</description>
     <url/>
     <licenses>
         <license/>
@@ -132,6 +132,72 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/agent/examples/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>com/kama/jchatmind/service/diagnosis/*</include>
+                                <include>com/kama/jchatmind/service/impl/DiagnosisTaskFacadeServiceImpl*</include>
+                                <include>com/kama/jchatmind/service/impl/SignalAssetFacadeServiceImpl*</include>
+                                <include>com/kama/jchatmind/service/impl/ParameterSourceFacadeServiceImpl*</include>
+                                <include>com/kama/jchatmind/converter/DiagnosisTaskConverter*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.50</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <includes>
+                                <include>com/kama/jchatmind/service/diagnosis/*</include>
+                                <include>com/kama/jchatmind/service/impl/DiagnosisTaskFacadeServiceImpl*</include>
+                                <include>com/kama/jchatmind/service/impl/SignalAssetFacadeServiceImpl*</include>
+                                <include>com/kama/jchatmind/service/impl/ParameterSourceFacadeServiceImpl*</include>
+                                <include>com/kama/jchatmind/converter/DiagnosisTaskConverter*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

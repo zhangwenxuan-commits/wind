@@ -1,219 +1,145 @@
+# Winds
 
-# AI智能体助手-JChatMind
+Winds 是一个面向风机轴承振动分析与故障诊断的智能诊断工作台。
 
-最近很多录友在做 AI 项目，但我发现一个普遍问题：
+这次重构的目标是把项目从“通用智能体壳”切换为“任务驱动的诊断产品”：
 
-简历写着“接入大模型、实现聊天”。
+- 用户入口从聊天切到诊断任务
+- 数据、参数、分析结果和结论以结构化页面呈现
+- AI 保留为分析与解释能力，不再作为主产品概念暴露
 
-面试官一句话就能给你问懵：“**那你到底做了什么？不就是调 API 吗**？”
+## 当前阶段
 
-一个聊天对话框和agent 是有区别的。
+本仓库已完成 Phase 1 的核心重构：
 
-我这次在[知识星球](https://programmercarl.com/other/kstar.html)里**更新一个Java Agent项目**：JChatMind（AI智能体助手）
+- 新的主导航：`工作台 / 诊断任务 / 数据资产 / 参数与知识 / 报告中心 / 系统配置`
+- 新的后端任务接口：`/api/diagnosis-tasks`
+- 新的数据资产接口：`/api/signal-assets`
+- 新的参数源接口：`/api/parameter-sources`
+- 诊断任务详情页支持直接触发分析，并把结果沉淀为结构化任务结果
 
-JChatMind 是一个智能 AI Agent 系统，基于 Spring AI 框架构建，实现了自主决策、工具调用和知识库检索等核心能力。
+当前仍保留旧聊天页和旧知识库页作为兼容入口：
 
-系统采用 **Think-Execute 循环机制，能够理解复杂任务、规划执行步骤、调用外部工具，并基于 RAG 技术从知识库中检索相关信息，完成多步骤的复杂任务**。
+- `/legacy/chat`
+- `/legacy/knowledge-base`
 
-它不是“聊天机器人”，而是 Agent：**能规划、能调用工具、能检索知识库、还能把执行过程实时推给前端**。
+## 目录
 
-你做完它，面试官再问 AI 项目，你能讲的就不是“我接了个接口”，而是：
+```text
+winds/
+  docs/                    需求文档、信息架构、后端重构方案、交付表
+  ui/                      React + Vite 前端
+  jchatmind/               Spring Boot + MyBatis 后端
+  jchatmind.sql            数据库初始化脚本
+```
 
-* 我实现了 Think-Execute 循环（自主决策）
-* 我实现了 工具调用框架（可扩展）
-* 我实现了 RAG + 向量检索（pgvector）
-* 我实现了 多模型切换架构（注册表模式）
-* 我实现了 SSE 实时推送（执行状态可视化）
+## 关键文档
 
-### 项目演示
+- [重构需求文档](docs/winds-refactor-prd.md)
+- [信息架构与页面设计草案](docs/winds-information-architecture.md)
+- [后端重构方案草案](docs/winds-backend-refactor-plan.md)
+- [Phase 1 交付表](docs/phase1-delivery.md)
 
-![image](https://file1.kamacoder.com/i/web/2026-01-09_16-30-36.jpg)
+## 技术栈
 
-![image](https://file1.kamacoder.com/i/web/2026-01-09_16-31-19.jpg)
+### 前端
 
-![image](https://file1.kamacoder.com/i/web/2026-01-09_16-31-49.jpg)
+- React 19
+- React Router 7
+- Ant Design 6
+- Vite 5
+- TypeScript
 
-![image](https://file1.kamacoder.com/i/web/2026-01-09_16-32-08.jpg)
+### 后端
 
-### 项目专栏目录
+- Spring Boot 3
+- MyBatis
+- PostgreSQL
+- Spring AI
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_10-43-35.jpg)
+## 已实现的核心流程
 
-从理论基础：agent的基本概念
+1. 在 `数据资产` 上传 MAT 文件
+2. 在 `诊断任务` 新建任务并绑定振动/转速文件
+3. 选择参数源
+4. 在任务详情页执行分析
+5. 查看结构化分析结果、证据摘要和结论
+6. 人工确认诊断结论
 
-到项目实战：大模型怎么用、环境怎么搭，Agent loop如何设计，怎么引入知识库与RAG，以及MCP
+## 数据库
 
-最后再到求职相关：项目的简历写法、项目亮点、本项目常见面试题，都给大家准备好了。
+这次重构新增了 `diagnosis_task` 表。
 
-从**项目源码到答疑，一条龙服务，不用担心学不会，有什么问题都可以在专属微信群提问**：（[知识星球](https://programmercarl.com/other/kstar.html)里每个项目都有专属答疑群）
+如果你的本地数据库已经初始化过旧版本，需要把 [jchatmind.sql](jchatmind.sql) 中 `diagnosis_task` 的 DDL 同步到现有库。
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_10-59-23.jpg)
+也可以直接执行最小迁移脚本：
 
-### 项目架构图
+- [docs/phase1-diagnosis-task.sql](docs/phase1-diagnosis-task.sql)
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-19-14.jpg)
+## 本地运行
 
-JChatMind 通过分层架构 + Agent 核心服务，把 AI 能力（模型、RAG、工具）抽象成可组合、可扩展的系统模块
+### 1. 后端
 
-### 获取本专栏
+```bash
+cd jchatmind
+mvn spring-boot:run
+```
 
-扫如下十元代金券，只需要 196元，加入[知识星球](https://programmercarl.com/other/kstar.html)，你将**获取20+套项目教程的专栏+源码+配套答疑**： （每个项目不到十元钱，而且**加入星球的服务远不止就这些项目**！）
+默认配置：
 
-如果不知道[知识星球](https://programmercarl.com/other/kstar.html)对自己是否有帮助，可以进来看看，感受一下星球里的学习氛围，**三天（72h）内可以全额退款**！
+- 端口：`8080`
+- 数据库：`jdbc:postgresql://localhost:5432/jchatmind`
 
-知识星球APP右上角 自己申请退款，一个小时到账 全程无套路， **记得是三天内（72h）才能退款**。
+### 2. 前端
 
-### 项目专栏细节
+```bash
+cd ui
+npm install
+npm run dev
+```
 
-理论知识讲解：
+默认访问地址：
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-02-38.jpg)
+- `http://localhost:5173`
 
-循序渐进，带你做agent实战开发：
+## 测试
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-03-33.jpg)
+### 后端单元测试
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-03-57.jpg)
+```bash
+cd jchatmind
+mvn verify
+```
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-03-57.jpg)
+本轮重构核心后端模块已接入 JaCoCo 覆盖率检查，覆盖范围包括：
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-04-20.jpg)
+- `DiagnosisTaskAnalyzer`
+- `DiagnosisTaskFacadeServiceImpl`
+- `SignalAssetFacadeServiceImpl`
+- `ParameterSourceFacadeServiceImpl`
+- `DiagnosisTaskConverter`
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-04-41.jpg)
+覆盖率报告输出位置：
 
-最后，求职相关，简历写法、相关面试题，技术亮点 都安排的明明白白：
+- `jchatmind/target/site/jacoco/index.html`
 
-**技术亮点、性能指标、功能指标、技术指标**，都给大家列出，甚至，不同岗位（后端、算法、大模型）使用这个项目的简历写法，都列出来，让面试没有死角：
+### 前端构建校验
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-05-09.jpg)
+```bash
+cd ui
+npm run build
+```
 
-**技术选型的理由、技术难点、解决方案、技术成长点、深入解析计数原理**：
+## 当前限制
 
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-11-08.jpg)
+1. `参数与知识` 目前仍复用原有知识库作为参数源，尚未完全结构化
+2. `报告中心` 和 `系统配置` 仍是 Phase 1 占位模块
+3. 任务分析结果当前复用现有振动分析服务，后续还需要进一步拆出独立的任务编排和报告模型
+4. 数据资产底层暂时仍依赖现有 `document` 存储链路，后续可以再演进为独立 `signal_asset` 模型
 
-针对项目原理和项目实现都准备了相关面试题
+## 下一步建议
 
-项目原理面试题以及回答：
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-15-22.jpg)
-
-项目实战面试题以及回答：
-![](https://file1.kamacoder.com/i/web/2026-01-08_11-14-09.jpg)
-
-
-### 项目亮点
-
-1、**真正的 Agent Loop（Think-Execute 循环 + 状态机**）
-
-不是“调用一次大模型就结束”，而是支持：
-
-* 多轮规划
-* 多轮工具调用
-* 状态管理（THINKING / EXECUTING / DONE / ERROR）
-* 错误处理与最大步数控制（防止无限循环）
-
-这里的技术点：“怎么避免 Agent 无限调用工具？怎么做状态管理？怎么做超时控制？”
-
-2、**工具系统（固定工具 + 可选工具，可扩展、可治理**）
-
-很多人做工具调用只是“写几个 if else”，JChatMind 的工具系统是“框架化”的：
-
-* 工具自动注册
-* 固定工具 / 可选工具分类管理
-* 可扩展：新增工具不改核心流程
-* 可控：禁用 Spring AI 自动执行，改为手动管理 ToolCalling 流程
-
-这里的技术点：“工具调用怎么做扩展？工具失败怎么处理？工具返回结果怎么进入对话历史？”
-
-这就是讲“系统设计”的地方。
-
-3、**RAG 知识库（PostgreSQL + pgvector**）
-
-RAG 不是 PPT 概念，JChatMind 是完整链路：
-
-* Markdown 文档解析、分块
-* Embedding 生成并落库
-* pgvector 相似度检索（<->）
-* ivfflat 索引优化，支持 10 万+向量
-
-而且最关键的点是：用 PostgreSQL 一套体系把结构化数据和向量数据都管了（部署简单、成本低、事务一致性好）
-
-4、**多模型支持（注册表模式 ChatClientRegistry**）
-
-项目不是“绑定一个模型”，而是：
-
-* DeepSeek / 智谱 AI 可切换
-* 统一 ChatClient 接口
-* 注册表模式管理模型实例（解耦创建与使用）
-* 便于未来扩展更多模型
-
-这里也涉及到：如果要加一个新模型要改哪些代码？怎么做到无侵入？
-
-5、**SSE 实时通信（执行过程实时可视化**）
-
-很多 Agent 项目体验很差：用户不知道系统在干嘛。
-
-JChatMind 用 SSE 做了：
-
-* 状态实时推送：THINKING / EXECUTING / DONE
-* 前端能实时看到“Agent 正在干啥”
-* 比 WebSocket 更简单，适合单向推送
-
-这里会涉及到：SSE 和 WebSocket 区别？连接怎么管理？超时怎么处理？并发怎么扛？
-
-这又是一套高质量八股 + 项目结合。
-
-
-### 学完本项目可以掌握什么？
-
-* AI Agent 核心：Think-Execute 循环（多轮规划 + 多轮工具调用）+ 状态机 + 超时/错误处理
-* 工具调用体系：可扩展工具框架（固定/可选工具）、工具注册与调度、手动接管 Spring AI 工具执行流程
-* RAG 全链路：Markdown 解析与分块 → Embedding 入库 → pgvector 相似度检索（索引优化、SQL 调优）
-* 多模型架构设计：ChatClientRegistry 注册表模式，支持 DeepSeek/智谱等模型动态切换与扩展
-* 后端工程能力：Spring Boot 分层架构、RESTful API、统一异常/响应、MyBatis 复杂 SQL + 自定义 TypeHandler（vector）
-* 实时通信：SSE 服务端推送、连接管理、执行状态实时展示
-* 可量化成果表达：响应 <2s、并发 100+、检索准确率 85%+ 这种“面试官一眼懂”的指标怎么做、怎么写、怎么讲
-
-
-### 加入知识星球获取本项目
-
-加入[知识星球](https://programmercarl.com/other/kstar.html) 获取本项目。
-
-加入[知识星球](https://mp.weixin.qq.com/s/iUiIRYlJvNqTsvfQXwK6FA)四大权益
-
-1、**高质量项目合集（C++ / Java / Go / Python / AI**）
-
-可以获得星球里 **20+ 套项目专栏资料，不仅有详细讲解，而且都配套专属答疑服务**。
-
-全网十分稀缺的  **C++ AI应用项目（AI应用服务平台），Go AI项目（GopherAI），Java AI项目（JChatMind**）。
-
-![](https://file1.kamacoder.com/i/web/2025-12-31_11-41-52.jpg)
-
-2、**精品八股PDF**
-
-速记八股帮助众多录友们，短时间内快速上岸：
-
-![](https://file1.kamacoder.com/i/web/2025-09-28_17-44-23.jpg)
-
-3、**独家资料 & 学习氛围**
-
-大厂面经、薪资报告、秋招投递总结表
-
-![](https://file1.kamacoder.com/i/web/2025-09-28_18-26-47.jpg)
-
-学习路线清晰，方向明确
-
-![](https://file1.kamacoder.com/i/web/2025-09-28_18-39-32.jpg)
-
-星球里全是志同道合的伙伴，学习氛围 🔥🔥🔥
-
-![](https://file1.kamacoder.com/i/web/2025-09-28_18-50-25.jpg)
-
-4、**卡哥 1v1 提问 & 简历修改**
-
-直接向我提问，面试疑惑、学习路线、职业规划一对一解答
-
-![](https://file1.kamacoder.com/i/web/2025-09-29_10-07-44.jpg)
-
-加入[知识星球](https://mp.weixin.qq.com/s/iUiIRYlJvNqTsvfQXwK6FA)后如果不满意，三天内（72h）可全额退款！
-
-
+1. 把参数模板从 Markdown/知识库逐步迁移到结构化表模型
+2. 为任务分析增加 `analysis_run / analysis_evidence / diagnosis_report`
+3. 把任务详情页的结果面板继续增强为频谱、包络、阶次等图形视图
+4. 为报告中心补齐正式导出与修订历史

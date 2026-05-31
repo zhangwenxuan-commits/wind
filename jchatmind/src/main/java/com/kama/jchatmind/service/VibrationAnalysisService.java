@@ -1,6 +1,7 @@
 package com.kama.jchatmind.service;
 
 import com.kama.jchatmind.model.dto.DocumentDTO;
+import com.kama.jchatmind.service.diagnosis.DiagnosisThresholdProfile;
 import com.kama.jchatmind.service.vibration.VibrationModels;
 
 import java.io.IOException;
@@ -41,5 +42,13 @@ public interface VibrationAnalysisService {
             double pitchDiameterMm,
             double contactAngleDeg
     );
-    VibrationModels.DiagnosisResult diagnose(String documentId, String symptomHint) throws IOException;
+    default VibrationModels.DiagnosisResult diagnose(String documentId, String symptomHint) throws IOException {
+        return diagnose(documentId, symptomHint, DiagnosisThresholdProfile.defaults());
+    }
+
+    VibrationModels.DiagnosisResult diagnose(
+            String documentId,
+            String symptomHint,
+            DiagnosisThresholdProfile thresholdProfile
+    ) throws IOException;
 }
